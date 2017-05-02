@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="author" content="Daniel Teo" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tetris</title>
+    <link href="style/main.css" rel="stylesheet" type="text/css">
+</head>
+<body class="animated fade-in">
+    <div id="game-container">
+        <div id="game-grid">
+            <div id="grid-overlay" class="animated fade-in">
+                <div id="grid-overlay-content">
+                    <p id="grid-overlay-text">Press Start</p>
+                    <a class="button" id="grid-overlay-btn">Start</a>
+                </div>
+            </div>
+        </div>
+        <div id="game-stats">
+            <h3>Tetris</h3>
+            <div class="game-stat-title">Next Block</div>
+            <div id="game-next-block"></div>
+            <div class="game-all-time">
+                <div class="game-stat-title">All Time</div>
+                <div class="game-stat">Score &nbsp;<p class="inline" id="game-best-score">0</p></div>
+                <div class="game-stat">Lines &nbsp;<p class="inline" id="game-best-lines">0</p></div>
+            </div>
+            <div class="game-current">
+                <div class="game-stat-title">This Game</div>
+                <div class="game-stat">Score &nbsp;<p class="inline" id="game-score">0</p></div>
+                <div class="game-stat">Lines &nbsp;<p class="inline" id="game-lines">0</p></div>
+            </div>
+        </div>
+    </div>
+    <script src="js/block.js"></script>
+    <script src="js/grid.js"></script>
+    <script src="js/tetris.js"></script>
+</body>
+</html>
