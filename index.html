@@ -11,6 +11,9 @@
 <body class="animated fade-in">
     <div id="game-container">
         <div id="game-grid">
+            <div id="grid-floating-box" class="floating-box flash-fade hidden">
+                <p id="grid-floating-message" class="floating-message">Faster!</p>
+            </div>
             <div id="grid-overlay" class="overlay animated fade-in">
                 <div id="grid-overlay-content" class="overlay-content">
                     <p id="grid-overlay-text">Press Start</p>
@@ -24,14 +27,16 @@
             </div>
             <div id="stats-overlay" class="overlay animated fade-in hidden">
                 <div class="top-right">
-                    <a id="stats-overlay-close" class="overlay-close link">x</a>
+                    <a id="stats-overlay-close" class="overlay-close link">X</a>
                 </div>
                 <div id="stats-overlay-content" class="overlay-content">
-                    <p><strong>A / left</strong> shift left</p>
-                    <p><strong>D / right</strong> shift right</p>
-                    <p><strong>W / up</strong> rotate</p>
-                    <p><strong>S / down</strong> fast forward</p>
-                    <p><strong>space</strong> drop down</p>
+                    <table>
+                        <tr><td class="emphasis">A / left</td><td>shift left</td></tr>
+                        <tr><td class="emphasis">D / right</td><td>shift right</td></tr>
+                        <tr><td class="emphasis">W / up</td><td>rotate</td></tr>
+                        <tr><td class="emphasis">S / down</td><td>fast forward</td></tr>
+                        <tr><td class="emphasis">space</td><td>drop down</td></tr>
+                    </table>
                 </div>
             </div>
             <h3>Tetris</h3>

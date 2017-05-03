@@ -40,6 +40,18 @@ body {
     40% { color: #66BB6A; }
     100% { color: #666; }
 }
+@-webkit-keyframes flashFade {
+    0% { opacity: 0; }
+    30% { opacity: 1; }
+    70% { opacity: 1; }
+    100% { opacity: 0; }
+}
+@keyframes flashFade {
+    0% { opacity: 0; }
+    30% { opacity: 1; }
+    70% { opacity: 1; }
+    100% { opacity: 0; }
+}
 .animated {
     -webkit-animation-duration: 0.4s;
     animation-duration: 0.4s;
@@ -61,6 +73,14 @@ body {
     animation-fill-mode: both;
     -webkit-animation-name: greenFlash;
     animation-name: greenFlash;
+}
+.flash-fade {
+    -webkit-animation-duration: 1.4s;
+    animation-duration: 1.4s;
+    -webkit-animation-fill-mode: both;
+    animation-fill-mode: both;
+    -webkit-animation-name: flashFade;
+    animation-name: flashFade;
 }
 .button {
     cursor: pointer;
@@ -87,6 +107,22 @@ body {
 .link:hover {
     color: #858787;
 }
+.floating-box {
+    top: 45px;
+    left: 0;
+    width: 100%;
+    z-index: 2;
+    position: absolute;
+    font-size: 16px;
+    text-align: center;
+}
+.floating-message {
+    padding: 7px 18px;
+    color: #66BB6A;
+    display: inline;
+    background-color: rgb(230, 232, 232);
+    background-color: rgba(230, 232, 232, 0.6);
+}
 .overlay {
     top: 0;
     left: 0;
@@ -105,11 +141,20 @@ body {
     width: 100%;
     text-align: center;
 }
+.emphasis {
+    font-weight: bold;
+    text-align: right;
+    padding-right: 13px;
+}
 .top-right {
     top: 5px;
     right: 8px;
     position: absolute;
 }
+.hidden {
+    display: none;
+}
+
 
 #game-container {
     display: flex;
@@ -167,23 +212,24 @@ body {
     display: inline;
     color: #666;
 }
-
-
 #stats-overlay {
-    font-size: 15px;
+    font-size: 14px;
     color: #777;
     background-color: rgba(230, 232, 232, 0.95);
 }
-#stats-overlay strong {
-    margin-right: 10px;
+#stats-overlay-content table {
+    margin: 0 auto;
+    text-align: left;
 }
-#grid-overlay.hidden, #stats-overlay.hidden {
-    display: none;
+#stats-overlay-content td {
+    padding-bottom: 11px;
 }
 #grid-overlay-text {
     color: #858787;
     margin-bottom: 30px;
 }
+
+
 .grid-row {
     margin: 0;
     display: block;
@@ -195,7 +241,6 @@ body {
     display: inline-block;
     border: 1px solid #e6e8e8;
 }
-
 /* tetris shadow tiles */
 .grid-cell-sd-i {
     background-color: rgba(77,208,225,0.18);
@@ -225,7 +270,6 @@ body {
     background-color: rgba(244,67,54,0.1);
     border-color: rgba(229,57,53,0.1);
 }
-
 /* tetris tiles */
 .grid-cell-i {
     background-color: #4dd0e1;

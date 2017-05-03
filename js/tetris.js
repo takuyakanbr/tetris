@@ -21,9 +21,12 @@ function Tetris(opts) {
     this.spawnY = -3;
     this.grid = new GameGrid(opts.id, opts.rows, opts.cols);
     this.nextBlockGrid = new Grid('game-next-block', this.largestBlock, this.largestBlock);
+    this.tickRateStart = opts.tickRateStart || 11; // 1.1s
+    this.tickRateEnd = opts.tickRateEnd || 5; // 0.5s
+    this.tickRateStep = 6;
 
     // - state variables -
-    this.tickRate = opts.tickRate || 8; // default is every 0.8s
+    this.tickRate = this.tickRateStart;
     this.clock = 0;
     this.paused = (opts.paused !== undefined) ? opts.paused : true;
     this.over = false;
@@ -113,6 +116,21 @@ Tetris.prototype.addLines = function (delta) {
     }
     this.$lines.innerHTML = this.lines.toLocaleString();
     this._flashElementText(this.$lines);
+
+    // increase difficulty over time
+    if (this.tickRate > this.tickRateEnd) {
+        var newTickRate = this.tickRateStart - Math.floor(this.lines / this.tickRateStep);
+        if (newTickRate < this.tickRateEnd)
+            newTickRate = this.tickRateEnd;
+        if (newTickRate < this.tickRate) { // update tick rate
+            this.tickRate = newTickRate;
+            this.$floatingBox.classList.remove('hidden');
+            var self = this;
+            setTimeout(function () {
+                self.$floatingBox.classList.add('hidden');
+            }, 1400);
+        }
+    }
 };
 
 Tetris.prototype.hideOverlay = function () {
@@ -126,6 +144,7 @@ Tetris.prototype.showOverlay = function (message, buttonText) {
 };
 
 Tetris.prototype.restart = function () {
+    this.tickRate = this.tickRateStart;
     this.clock = 0;
     this.over = false;
     this.fastForward = false;
@@ -195,6 +214,7 @@ Tetris.prototype.setup = function () {
         self.handleOverlayButton();
     });
 
+    this.$floatingBox = document.getElementById('grid-floating-box');
     this.$overlay = document.getElementById('grid-overlay');
     if (!this.paused) this.hideOverlay();
     this.$overlayText = document.getElementById('grid-overlay-text');
@@ -334,11 +354,13 @@ InputManager.prototype.listen = function () {
         }
     });
 
+    // grid overlay button (start/pause/restart)
     this.bindButtonPress('grid-overlay-btn', function (e) {
         e.preventDefault();
         self.emit('button');
     });
 
+    // help panel
     var $statsOverlay = document.getElementById('stats-overlay');
     var $statsOverlayClose = document.getElementById('stats-overlay-close');
     this.bindButtonPress('game-stats-help', function () {
