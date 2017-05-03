@@ -9,8 +9,8 @@ div {
     padding: 0;
 }
 body {
-    width: 620px;
     margin: 85px auto;
+    width: 620px;
     font-size: 19px;
     background: #eff3f3;
 }
@@ -30,6 +30,16 @@ body {
     0% { opacity: 1; }
     100% { opacity: 0; }
 }
+@-webkit-keyframes greenFlash {
+    0% { color: #666; }
+    40% { color: #66BB6A; }
+    100% { color: #666; }
+}
+@keyframes greenFlash {
+    0% { color: #666; }
+    40% { color: #66BB6A; }
+    100% { color: #666; }
+}
 .animated {
     -webkit-animation-duration: 0.4s;
     animation-duration: 0.4s;
@@ -40,6 +50,67 @@ body {
     -webkit-animation-name: fadeIn;
     animation-name: fadeIn;
 }
+.fade-out {
+    -webkit-animation-name: fadeOut;
+    animation-name: fadeOut;
+}
+.flash {
+    -webkit-animation-duration: 0.5s;
+    animation-duration: 0.5s;
+    -webkit-animation-fill-mode: both;
+    animation-fill-mode: both;
+    -webkit-animation-name: greenFlash;
+    animation-name: greenFlash;
+}
+.button {
+    cursor: pointer;
+    padding: 8px 28px 10px;
+    font-variant: small-caps;
+    text-transform: lowercase;
+    font-size: 20px;
+    background: #dee0e0;
+    background: rgba(222, 224, 224, 0.7);
+    color: #999a9a;
+    -webkit-transition: .3s;
+    transition: .3s;
+}
+.button:hover {
+    color: #858787;
+}
+.link {
+    cursor: pointer;
+    font-size: 20px;
+    color: #999a9a;
+    -webkit-transition: .3s;
+    transition: .3s;
+}
+.link:hover {
+    color: #858787;
+}
+.overlay {
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    z-index: 3;
+    position: absolute;
+    font-size: 16px;
+    text-align: center;
+    background-color: rgb(230, 232, 232);
+    background-color: rgba(230, 232, 232, 0.6);
+}
+.overlay-content {
+    position: absolute;
+    bottom: 22%;
+    width: 100%;
+    text-align: center;
+}
+.top-right {
+    top: 5px;
+    right: 8px;
+    position: absolute;
+}
+
 #game-container {
     display: flex;
 }
@@ -55,7 +126,7 @@ body {
 }
 #game-stats {
     flex: 1;
-    padding-top: 13%;
+    position: relative;
     border-top-right-radius: 6px;
     border-bottom-right-radius: 6px;
     text-align: center;
@@ -64,6 +135,7 @@ body {
     color: #999a9a;
 }
 #game-stats h3 {
+    margin-top: 100px;
     font-size: 23px;
     color: #666;
 }
@@ -90,45 +162,23 @@ body {
     font-size: 15px;
     margin-bottom: 7px;
 }
-.inline {
+.game-stat-data {
     font-size: 16px;
     display: inline;
     color: #666;
 }
-.button {
-    cursor: pointer;
-    padding: 8px 28px 10px;
-    font-variant: small-caps;
-    text-transform: lowercase;
-    font-size: 20px;
-    background: #dee0e0;
-    background: rgba(222, 224, 224, 0.7);
-    color: #999a9a;
-}
-.button:hover {
-    color: #858787;
-}
 
 
-#grid-overlay {
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 100%;
-    position: absolute;
-    font-size: 16px;
-    text-align: center;
-    background-color: rgb(230, 232, 232);
-    background-color: rgba(230, 232, 232, 0.6);
+#stats-overlay {
+    font-size: 15px;
+    color: #777;
+    background-color: rgba(230, 232, 232, 0.95);
 }
-#grid-overlay.hidden {
+#stats-overlay strong {
+    margin-right: 10px;
+}
+#grid-overlay.hidden, #stats-overlay.hidden {
     display: none;
-}
-#grid-overlay-content {
-    position: absolute;
-    bottom: 22%;
-    width: 100%;
-    text-align: center;
 }
 #grid-overlay-text {
     color: #858787;

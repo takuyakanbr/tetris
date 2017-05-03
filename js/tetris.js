@@ -84,14 +84,23 @@ Tetris.prototype._hideNextBlock = function () {
     this.nextBlockGrid.updateTempCells(this.nextBlock.getCellsFromOrigin(), null);
 };
 
+Tetris.prototype._flashElementText = function ($element) {
+    $element.classList.remove('flash');
+    setTimeout(function () {
+        $element.classList.add('flash');
+    }, 25);
+};
+
 Tetris.prototype.addScore = function (delta) {
     this.score += delta;
     if (this.score > this.bestScore) {
         this.bestScore = this.score;
         this.storageManager.setBestScore(this.bestScore);
         this.$bestScore.innerHTML = this.bestScore.toLocaleString();
+        this._flashElementText(this.$bestScore);
     }
     this.$score.innerHTML = this.score.toLocaleString();
+    this._flashElementText(this.$score);
 };
 
 Tetris.prototype.addLines = function (delta) {
@@ -100,8 +109,10 @@ Tetris.prototype.addLines = function (delta) {
         this.bestLines = this.lines;
         this.storageManager.setBestLines(this.bestLines);
         this.$bestLines.innerHTML = this.bestLines.toLocaleString();
+        this._flashElementText(this.$bestLines);
     }
     this.$lines.innerHTML = this.lines.toLocaleString();
+    this._flashElementText(this.$lines);
 };
 
 Tetris.prototype.hideOverlay = function () {
@@ -191,10 +202,10 @@ Tetris.prototype.setup = function () {
 
     this.bestScore = this.storageManager.getBestScore();
     this.$bestScore = document.getElementById('game-best-score');
-    this.$bestScore.innerHTML = this.storageManager.getBestScore();
+    this.$bestScore.innerHTML = parseInt(this.storageManager.getBestScore()).toLocaleString();
     this.bestLines = this.storageManager.getBestLines();
     this.$bestLines = document.getElementById('game-best-lines');
-    this.$bestLines.innerHTML = this.storageManager.getBestLines();
+    this.$bestLines.innerHTML = parseInt(this.storageManager.getBestLines()).toLocaleString();
     this.$score = document.getElementById('game-score');
     this.$lines = document.getElementById('game-lines');
 };
@@ -326,6 +337,22 @@ InputManager.prototype.listen = function () {
     this.bindButtonPress('grid-overlay-btn', function (e) {
         e.preventDefault();
         self.emit('button');
+    });
+
+    var $statsOverlay = document.getElementById('stats-overlay');
+    var $statsOverlayClose = document.getElementById('stats-overlay-close');
+    this.bindButtonPress('game-stats-help', function () {
+        $statsOverlay.classList.remove('fade-out');
+        $statsOverlay.classList.remove('hidden');
+    });
+    this.bindButtonPress('stats-overlay-close', function () {
+        $statsOverlay.classList.add('fade-out');
+        setTimeout(function () { // hide overlay after it fades out
+            if ($statsOverlay.classList.contains('fade-out')) {
+                $statsOverlay.classList.remove('fade-out');
+                $statsOverlay.classList.add('hidden');
+            }
+        }, 400);
     });
 };
 
