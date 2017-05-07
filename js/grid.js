@@ -1,3 +1,4 @@
+'use strict';
 
 /**
  * A cell (that's part of a grid)

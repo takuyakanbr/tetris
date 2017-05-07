@@ -1,14 +1,19 @@
+'use strict';
 
 /**
  * A template representing one type of tetris block
  * @constructor
  * @param {number} name used for displaying the cell
  * @param {number} directions number of possible orientations of block
+ * @param {boolean} limited
  * @param {Array<Array<number>>} grid block data
  */
-function BlockTemplate(name, directions, grid) {
+function BlockTemplate(name, directions, limited, grid) {
     this.name = name; // cell classname: .grid-cell-[name]
     this.directions = directions;
+    this.limited = limited; // don't start the game with this block
+    // position of the block for 1st direction: right-most bit of each element,
+    // 2nd direction: 2nd right-most bit, and so on
     this.grid = grid;
 }
 
@@ -93,4 +98,64 @@ Block.prototype.getRows = function () {
         }
     }
     return rows;
+};
+
+
+/**
+ * Provides a randomly shuffled source of Blocks
+ * @constructor
+ * @param {number} spawnX x-coordinate of block spawn point
+ * @param {number} spawnY y-coordinate of block spawn point
+ */
+function BlockGenerator(spawnX, spawnY) {
+    this.spawnX = spawnX;
+    this.spawnY = spawnY;
+    this.templates = [];
+    this.largestBlock = 0;
+
+    this.queue = [];
+    this.count = 0;
+}
+
+BlockGenerator.prototype.addTemplate = function (name, directions, limited, grid) {
+    if (grid.length > this.largestBlock)
+        this.largestBlock = grid.length;
+    this.templates.push(new BlockTemplate(name, directions, limited, grid));
+};
+
+BlockGenerator.prototype.getMaxSize = function () {
+    return this.largestBlock;
+};
+
+BlockGenerator.prototype.next = function () {
+    if (this.queue.length == 0)
+        this._populateQueue();
+    this.count++;
+    return new Block(this.queue.pop(), this.spawnX, this.spawnY);
+};
+
+BlockGenerator.prototype.reset = function () {
+    this.count = 0;
+    this._populateQueue();
+};
+
+BlockGenerator.prototype._populateQueue = function () {
+    var queue = this.templates.concat(this.templates);
+    this._shuffle(queue);
+    if (this.count == 0) { // don't start with a BlockTemplate marked limited
+        while (queue[queue.length - 1].limited)
+            this._shuffle(queue);
+    }
+    this.queue = queue;
+};
+
+// in-place array shuffling
+BlockGenerator.prototype._shuffle = function (array) {
+    for (var i = array.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+    return array;
 };

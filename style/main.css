@@ -3,16 +3,26 @@ html, body {
     margin: 0;
     padding: 0;
     font-family: 'Muli', sans-serif;
+    background: #eff3f3;
 }
 div {
     margin: 0;
     padding: 0;
 }
-body {
-    margin: 85px auto;
-    width: 620px;
-    font-size: 19px;
-    background: #eff3f3;
+a {
+    outline: none;
+    text-decoration: none;
+    cursor: pointer;
+    font-size: 20px;
+    color: #999a9a;
+    -webkit-transition: .3s;
+    transition: .3s;
+}
+a:hover, a:focus {
+    color: #858787;
+}
+p {
+    margin: 0;
 }
 @-webkit-keyframes fadeIn {
     0% { opacity: 0; }
@@ -40,19 +50,19 @@ body {
     40% { color: #66BB6A; }
     100% { color: #666; }
 }
-@-webkit-keyframes flashFade {
+@-webkit-keyframes blink {
     0% { opacity: 0; }
     30% { opacity: 1; }
     70% { opacity: 1; }
     100% { opacity: 0; }
 }
-@keyframes flashFade {
+@keyframes blink {
     0% { opacity: 0; }
     30% { opacity: 1; }
     70% { opacity: 1; }
     100% { opacity: 0; }
 }
-.animated {
+.fade-in, .fade-out, .flash, .blink-once {
     -webkit-animation-duration: 0.4s;
     animation-duration: 0.4s;
     -webkit-animation-fill-mode: both;
@@ -69,43 +79,21 @@ body {
 .flash {
     -webkit-animation-duration: 0.5s;
     animation-duration: 0.5s;
-    -webkit-animation-fill-mode: both;
-    animation-fill-mode: both;
     -webkit-animation-name: greenFlash;
     animation-name: greenFlash;
 }
-.flash-fade {
+.blink-once {
     -webkit-animation-duration: 1.4s;
     animation-duration: 1.4s;
-    -webkit-animation-fill-mode: both;
-    animation-fill-mode: both;
-    -webkit-animation-name: flashFade;
-    animation-name: flashFade;
+    -webkit-animation-name: blink;
+    animation-name: blink;
 }
 .button {
-    cursor: pointer;
     padding: 8px 28px 10px;
     font-variant: small-caps;
     text-transform: lowercase;
-    font-size: 20px;
     background: #dee0e0;
     background: rgba(222, 224, 224, 0.7);
-    color: #999a9a;
-    -webkit-transition: .3s;
-    transition: .3s;
-}
-.button:hover {
-    color: #858787;
-}
-.link {
-    cursor: pointer;
-    font-size: 20px;
-    color: #999a9a;
-    -webkit-transition: .3s;
-    transition: .3s;
-}
-.link:hover {
-    color: #858787;
 }
 .floating-box {
     top: 45px;
@@ -141,11 +129,6 @@ body {
     width: 100%;
     text-align: center;
 }
-.emphasis {
-    font-weight: bold;
-    text-align: right;
-    padding-right: 13px;
-}
 .top-right {
     top: 5px;
     right: 8px;
@@ -158,6 +141,9 @@ body {
 
 #game-container {
     display: flex;
+    margin: 85px auto;
+    width: 620px;
+    font-size: 19px;
 }
 #game-grid {
     flex: 0 0 auto;
@@ -166,7 +152,6 @@ body {
     margin: 0;
     border-top-left-radius: 6px;
     border-bottom-left-radius: 6px;
-    font-size: 0;
     border: 2px solid #e6e8e8;
 }
 #game-stats {
@@ -184,17 +169,16 @@ body {
     font-size: 23px;
     color: #666;
 }
-#game-next-block {
+.game-next-block {
     display: inline-block;
-    font-size: 0;
     border: 1px solid #dee0e0;
 }
-#game-next-block .grid-cell {
+.game-next-block .grid-cell {
     height: 20px;
     width: 20px;
     border: 1px solid #dee0e0;
 }
-#game-next-block, .game-all-time {
+.game-next-block, .game-all-time {
     margin-bottom: 23px;
 }
 .game-stat-title {
@@ -224,12 +208,21 @@ body {
 #stats-overlay-content td {
     padding-bottom: 11px;
 }
+#stats-overlay-content td:first-child {
+    font-weight: bold;
+    text-align: right;
+    padding-right: 13px;
+}
 #grid-overlay-text {
     color: #858787;
     margin-bottom: 30px;
 }
 
 
+
+.grid-container {
+    font-size: 0;
+}
 .grid-row {
     margin: 0;
     display: block;
@@ -242,60 +235,60 @@ body {
     border: 1px solid #e6e8e8;
 }
 /* tetris shadow tiles */
-.grid-cell-sd-i {
+.grid-cell.grid-cell-sd-i {
     background-color: rgba(77,208,225,0.18);
     border-color: rgba(38,198,218,0.18);
 }
-.grid-cell-sd-j {
+.grid-cell.grid-cell-sd-j {
     background-color: rgba(33,150,243,0.1);
     border-color: rgba(30,136,229,0.1);
 }
-.grid-cell-sd-l {
+.grid-cell.grid-cell-sd-l {
     background-color: rgba(255,152,0,0.18);
     border-color: rgba(251,140,0,0.18);
 }
-.grid-cell-sd-o {
+.grid-cell.grid-cell-sd-o {
     background-color: rgba(253,216,53,0.18);
     border-color: rgba(251,192,45,0.18);
 }
-.grid-cell-sd-s {
+.grid-cell.grid-cell-sd-s {
     background-color: rgba(156,204,101,0.18);
     border-color: rgba(139,195,74,0.18);
 }
-.grid-cell-sd-z {
+.grid-cell.grid-cell-sd-z {
     background-color: rgba(186,104,200,0.1);
     border-color: rgba(178,78,195,0.1);
 }
-.grid-cell-sd-t {
+.grid-cell.grid-cell-sd-t {
     background-color: rgba(244,67,54,0.1);
     border-color: rgba(229,57,53,0.1);
 }
 /* tetris tiles */
-.grid-cell-i {
+.grid-cell.grid-cell-i {
     background-color: #4dd0e1;
-    border-color: #26c6da !important;
+    border-color: #26c6da;
 }
-.grid-cell-j {
+.grid-cell.grid-cell-j {
     background-color: #2196f3;
-    border-color: #1e88e5 !important;
+    border-color: #1e88e5;
 }
-.grid-cell-l {
+.grid-cell.grid-cell-l {
     background-color: #ff9800;
-    border-color: #fb8c00 !important;
+    border-color: #fb8c00;
 }
-.grid-cell-o {
+.grid-cell.grid-cell-o {
     background-color: #fdd835;
-    border-color: #fbc02d !important;
+    border-color: #fbc02d;
 }
-.grid-cell-s {
+.grid-cell.grid-cell-s {
     background-color: #9ccc65;
-    border-color: #8bc34a !important;
+    border-color: #8bc34a;
 }
-.grid-cell-z {
+.grid-cell.grid-cell-z {
     background-color: #ba68c8;
-    border-color: #b24ec3 !important;
+    border-color: #b24ec3;
 }
-.grid-cell-t {
+.grid-cell.grid-cell-t {
     background-color: #f44336;
-    border-color: #e53935 !important;
+    border-color: #e53935;
 }

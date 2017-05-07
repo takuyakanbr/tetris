@@ -8,49 +8,49 @@
     <title>Tetris</title>
     <link href="style/main.css" rel="stylesheet" type="text/css">
 </head>
-<body class="animated fade-in">
+<body class="fade-in">
     <div id="game-container">
-        <div id="game-grid">
-            <div id="grid-floating-box" class="floating-box flash-fade hidden">
+        <div id="game-grid" class="grid-container">
+            <div id="grid-floating-box" class="floating-box blink-once hidden">
                 <p id="grid-floating-message" class="floating-message">Faster!</p>
             </div>
-            <div id="grid-overlay" class="overlay animated fade-in">
+            <div id="grid-overlay" class="overlay fade-in">
                 <div id="grid-overlay-content" class="overlay-content">
                     <p id="grid-overlay-text">Press Start</p>
-                    <a class="button" id="grid-overlay-btn">Start</a>
+                    <a href="#" class="button" id="grid-overlay-btn">Start</a>
                 </div>
             </div>
         </div>
         <div id="game-stats">
             <div class="top-right">
-                <a id="game-stats-help" class="link">?</a>
+                <a href="#" id="game-stats-help">?</a>
             </div>
-            <div id="stats-overlay" class="overlay animated fade-in hidden">
+            <div id="stats-overlay" class="overlay fade-in hidden">
                 <div class="top-right">
-                    <a id="stats-overlay-close" class="overlay-close link">X</a>
+                    <a href="#" id="stats-overlay-close" class="overlay-close">X</a>
                 </div>
                 <div id="stats-overlay-content" class="overlay-content">
                     <table>
-                        <tr><td class="emphasis">A / left</td><td>shift left</td></tr>
-                        <tr><td class="emphasis">D / right</td><td>shift right</td></tr>
-                        <tr><td class="emphasis">W / up</td><td>rotate</td></tr>
-                        <tr><td class="emphasis">S / down</td><td>fast forward</td></tr>
-                        <tr><td class="emphasis">space</td><td>drop down</td></tr>
+                        <tr><td>A / left</td><td>shift left</td></tr>
+                        <tr><td>D / right</td><td>shift right</td></tr>
+                        <tr><td>W / up</td><td>rotate</td></tr>
+                        <tr><td>S / down</td><td>fast forward</td></tr>
+                        <tr><td>space</td><td>drop down</td></tr>
                     </table>
                 </div>
             </div>
             <h3>Tetris</h3>
-            <div class="game-stat-title">Next Block</div>
-            <div id="game-next-block"></div>
+            <p class="game-stat-title">Next Block</p>
+            <div id="game-next-block" class="grid-container game-next-block"></div>
             <div class="game-all-time">
-                <div class="game-stat-title">All Time</div>
-                <div class="game-stat">Score &nbsp;<p class="game-stat-data" id="game-best-score">0</p></div>
-                <div class="game-stat">Lines &nbsp;<p class="game-stat-data" id="game-best-lines">0</p></div>
+                <p class="game-stat-title">All Time</p>
+                <p class="game-stat">Score &nbsp;<span class="game-stat-data" id="game-best-score">0</span></p>
+                <p class="game-stat">Lines &nbsp;<span class="game-stat-data" id="game-best-lines">0</span></p>
             </div>
             <div class="game-current">
-                <div class="game-stat-title">This Game</div>
-                <div class="game-stat">Score &nbsp;<p class="game-stat-data" id="game-score">0</p></div>
-                <div class="game-stat">Lines &nbsp;<p class="game-stat-data" id="game-lines">0</p></div>
+                <p class="game-stat-title">This Game</p>
+                <p class="game-stat">Score &nbsp;<span class="game-stat-data" id="game-score">0</span></p>
+                <p class="game-stat">Lines &nbsp;<span class="game-stat-data" id="game-lines">0</span></p>
             </div>
         </div>
     </div>

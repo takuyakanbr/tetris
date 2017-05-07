@@ -1,3 +1,4 @@
+'use strict';
 
 // returns a random integer between min (inclusive) and max (exclusive)
 function getRandomInt(min, max) {
@@ -14,13 +15,12 @@ function Tetris(opts) {
     // - static variables -
     this.inputManager = new InputManager();
     this.storageManager = new StorageManager();
-    this.templates = [];
-    this.largestBlock = 0;
+    
+    this.generator = new BlockGenerator(Math.floor(opts.cols / 2) - 2, -3);
     this.setupTemplates();
-    this.spawnX = Math.floor(opts.cols / 2) - 2;
-    this.spawnY = -3;
+
     this.grid = new GameGrid(opts.id, opts.rows, opts.cols);
-    this.nextBlockGrid = new Grid('game-next-block', this.largestBlock, this.largestBlock);
+    this.nextBlockGrid = new Grid('game-next-block', this.generator.getMaxSize(), this.generator.getMaxSize());
     this.tickRateStart = opts.tickRateStart || 11; // 1.1s
     this.tickRateEnd = opts.tickRateEnd || 5; // 0.5s
     this.tickRateStep = 6;
@@ -37,8 +37,6 @@ function Tetris(opts) {
     this.bestLines = 0;
     this.score = 0;
     this.lines = 0;
-    this.blocks = 0;
-    this.badluck = 0;
     this.nextBlock = null;
 
     // - setup -
@@ -63,20 +61,8 @@ Tetris.prototype.makeNextBlock = function () {
     if (this.nextBlock !== null)
         this._hideNextBlock();
 
-    var tps = this.templates;
-    var next = getRandomInt(0, tps.length);
-
-    // ensure 's' and 'z' don't appear as first 2 tiles or more than 4 times in a row
-    if (this.blocks <= 1 || this.badluck >= 4) {
-        while (tps[next].name == 's' || tps[next].name == 'z')
-            next = getRandomInt(0, tps.length);
-    }
-
-    this.nextBlock = new Block(tps[next], this.spawnX, this.spawnY);
+    this.nextBlock = this.generator.next();
     this._showNextBlock();
-    this.blocks++;
-    if (tps[next].name == 's' || tps[next].name == 'z') this.badluck++;
-    else this.badluck = 0;
 };
 
 Tetris.prototype._showNextBlock = function () {
@@ -152,6 +138,7 @@ Tetris.prototype.restart = function () {
     this.lines = 0;
     this.blocks = 0;
     this.badluck = 0;
+    this.generator.reset();
     this.makeNextBlock();
     this.grid.changeBlock(null);
     this.grid.clear();
@@ -231,56 +218,48 @@ Tetris.prototype.setup = function () {
 };
 
 Tetris.prototype.setupTemplates = function () {
-    // position of the block for 1st direction: right-most bit of each element, 
-    // 2nd direction: 2nd right-most bit, and so on
-    this._setupTemplate('i', 2, [
+    this.generator.addTemplate('i', 2, false, [
         [0, 1, 0, 0],
         [0, 1, 0, 0],
         [2, 3, 2, 2],
         [0, 1, 0, 0]
     ]);
-    this._setupTemplate('j', 4, [
+    this.generator.addTemplate('j', 4, false, [
         [0, 0, 0, 0],
         [0, 4, 5, 0],
         [8, 14, 9, 0],
         [0, 7, 11, 2]
     ]);
-    this._setupTemplate('l', 4, [
+    this.generator.addTemplate('l', 4, false, [
         [0, 0, 0, 0],
         [0, 5, 4, 0],
         [0, 3, 14, 2],
         [8, 11, 13, 0]
     ]);
-    this._setupTemplate('o', 1, [
+    this.generator.addTemplate('o', 1, true, [
         [0, 0, 0, 0],
         [0, 0, 0, 0],
         [0, 1, 1, 0],
         [0, 1, 1, 0]
     ]);
-    this._setupTemplate('t', 4, [
+    this.generator.addTemplate('t', 4, false, [
         [0, 0, 0, 0],
         [0, 11, 0, 0],
         [13, 15, 7, 0],
         [0, 14, 0, 0]
     ]);
-    this._setupTemplate('s', 2, [
+    this.generator.addTemplate('s', 2, true, [
         [0, 0, 0, 0],
         [0, 2, 0, 0],
         [0, 3, 3, 0],
         [1, 1, 2, 0]
     ]);
-    this._setupTemplate('z', 2, [
+    this.generator.addTemplate('z', 2, true, [
         [0, 0, 0, 0],
         [0, 0, 2, 0],
         [1, 3, 2, 0],
         [0, 3, 1, 0]
     ]);
-};
-
-Tetris.prototype._setupTemplate = function (name, directions, grid) {
-    if (grid.length > this.largestBlock)
-        this.largestBlock = grid.length;
-    this.templates.push(new BlockTemplate(name, directions, grid));
 };
 
 
@@ -363,11 +342,13 @@ InputManager.prototype.listen = function () {
     // help panel
     var $statsOverlay = document.getElementById('stats-overlay');
     var $statsOverlayClose = document.getElementById('stats-overlay-close');
-    this.bindButtonPress('game-stats-help', function () {
+    this.bindButtonPress('game-stats-help', function (e) {
+        e.preventDefault();
         $statsOverlay.classList.remove('fade-out');
         $statsOverlay.classList.remove('hidden');
     });
-    this.bindButtonPress('stats-overlay-close', function () {
+    this.bindButtonPress('stats-overlay-close', function (e) {
+        e.preventDefault();
         $statsOverlay.classList.add('fade-out');
         setTimeout(function () { // hide overlay after it fades out
             if ($statsOverlay.classList.contains('fade-out')) {
