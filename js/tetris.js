@@ -294,6 +294,23 @@ InputManager.prototype.bindButtonPress = function (elementId, fn) {
     button.addEventListener('touchend', fn);
 };
 
+InputManager.prototype.handleSwipe = function (dx, dy, touchEnd) {
+    var ax = Math.abs(dx);
+    var ay = Math.abs(dy);
+    if (ax <= 22 && ay <= 22) return false;
+
+    if (ax > ay) { // left / right
+        var move = dx < 0 ? 1 : 2;
+        this.emit('move', move);
+        return true;
+    } else if (ax < ay && touchEnd) { // up / down
+        var move = dy < 0 ? 3 : 4;
+        this.emit('move', move);
+        return true;
+    }
+    return false;
+};
+
 InputManager.prototype.listen = function () {
     var self = this;
     
@@ -331,6 +348,40 @@ InputManager.prototype.listen = function () {
                 self.emit('pause');
             }
         }
+    });
+
+    // swipes
+    var touchStartX, touchStartY;
+    var $gameGrid = document.getElementById('game-grid');
+
+    $gameGrid.addEventListener('touchstart', function (e) {
+        if (e.touches.length > 1 || e.targetTouches.length > 1) return;
+        touchStartX = event.touches[0].clientX;
+        touchStartY = event.touches[0].clientY;
+        e.preventDefault();
+    });
+
+    $gameGrid.addEventListener('touchmove', function (e) {
+        if (e.touches.length > 1 || e.targetTouches.length > 1) return;
+
+        var touchEndX = event.touches[0].clientX;
+        var touchEndY = event.touches[0].clientY;
+        var dx = touchEndX - touchStartX;
+        var dy = touchEndY - touchStartY;
+        if (self.handleSwipe(dx, dy, false)) {
+            touchStartX = touchEndX;
+            touchStartY = touchEndY;
+        }
+        e.preventDefault();
+    });
+
+    $gameGrid.addEventListener('touchend', function (e) {
+        if (e.touches.length > 0 || e.targetTouches.length > 0) return;
+
+        var dx = e.changedTouches[0].clientX - touchStartX;
+        var dy = e.changedTouches[0].clientY - touchStartY;
+        self.handleSwipe(dx, dy, true);
+        e.preventDefault();
     });
 
     // grid overlay button (start/pause/restart)

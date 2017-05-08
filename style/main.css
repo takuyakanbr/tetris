@@ -3,7 +3,7 @@ html, body {
     margin: 0;
     padding: 0;
     font-family: 'Muli', sans-serif;
-    background: #eff3f3;
+    background-color: #eff3f3;
 }
 div {
     margin: 0;
@@ -141,8 +141,8 @@ p {
 
 #game-container {
     display: flex;
-    margin: 85px auto;
-    width: 620px;
+    justify-content: center;
+    margin: 85px 0;
     font-size: 19px;
 }
 #game-grid {
@@ -153,14 +153,15 @@ p {
     border-top-left-radius: 6px;
     border-bottom-left-radius: 6px;
     border: 2px solid #e6e8e8;
+    background-color: #eff3f3;
 }
 #game-stats {
-    flex: 1;
+    flex: 1 0 110px;
+    max-width: 265px;
     position: relative;
     border-top-right-radius: 6px;
     border-bottom-right-radius: 6px;
     text-align: center;
-    font-size: 0;
     background-color: #e6e8e8;
     color: #999a9a;
 }
@@ -217,7 +218,6 @@ p {
     color: #858787;
     margin-bottom: 30px;
 }
-
 
 
 .grid-container {
@@ -291,4 +291,27 @@ p {
 .grid-cell.grid-cell-t {
     background-color: #f44336;
     border-color: #e53935;
+}
+
+
+@media(max-height: 680px) {
+    #game-container {
+        margin: 10px;
+    }
+}
+@media(max-width: 520px) {
+    html {
+        background-color: #e9eaea;
+    }
+    body {
+        background: none;
+    }
+    #game-container {
+        margin: 3px;
+        justify-content: flex-start;
+    }
+    .grid-cell {
+        height: 22px;
+        width: 22px;
+    }
 }
