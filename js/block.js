@@ -3,72 +3,137 @@
 /**
  * A template representing one type of tetris block
  * @constructor
- * @param {number} name used for displaying the cell
- * @param {number} directions number of possible orientations of block
- * @param {boolean} limited
+ * @param {number} name used as part of classname when displaying the block
+ * @param {number} forms number of possible forms
+ * @param {boolean} starter whether we can start the game with this block
  * @param {Array<Array<number>>} grid block data
  */
-function BlockTemplate(name, directions, limited, grid) {
-    this.name = name; // cell classname: .grid-cell-[name]
-    this.directions = directions;
-    this.limited = limited; // don't start the game with this block
-    // position of the block for 1st direction: right-most bit of each element,
-    // 2nd direction: 2nd right-most bit, and so on
-    this.grid = grid;
+function BlockTemplate(name, forms, starter, grid) {
+    this.name = name;
+    this.forms = forms;
+    this.starter = starter;
+    
+    // generate the lists of cells
+    var lists = [];
+    for (var form = 0; form < this.forms; form++) {
+        var cells = [];
+
+        for (var y = 0; y < grid.length; y++) {
+            for (var x = 0; x < grid[0].length; x++) {
+                if ((grid[y][x] >> form) & 1)
+                    cells.push({ x: x, y: y });
+            }
+        }
+
+        lists.push(cells);
+    }
+
+    this.cellLists = lists;
+}
+
+BlockTemplate.prototype.getCells = function (form) {
+    return this.cellLists[form];
 }
 
 
 /**
  * A tetris block
  * @constructor
- * @param {Object} tp block template
- * @param {number} x x-coordinate of the 1st col
- * @param {number} y y-coordinate of the 1st row
+ * @param {Object} template block template
+ * @param {number} x x-coordinate of the left-most col
+ * @param {number} y y-coordinate of the upper-most row
+ * @param {number} form starting form
  */
-function Block(tp, x, y) {
-    this.tp = tp;
-    this.x = x; // top left corner of area containing the block
+function Block(template, x, y, form) {
+    this.template = template;
+    this.x = x;
     this.y = y;
-    this.dir = 0; // which way the block is facing
+    this.form = form || 0;
     this.grounded = false; // whether we've touched the ground
+    this.cells = [] // list of cells the block occupy
+    this._updateCells();
 }
 
 Block.prototype.getName = function () {
-    return this.tp.name;
+    return this.template.name;
+};
+
+Block.prototype.getForms = function () {
+    return this.template.forms;
+}
+
+Block.prototype.getCells = function () {
+    return this.cells;
 };
 
 Block.prototype.copy = function () {
-    var block = new Block(this.tp, this.x, this.y);
-    block.dir = this.dir;
-    return block;
+    return new Block(this.template, this.x, this.y, this.form);
 };
 
 Block.prototype.shift = function (dx, dy) {
     this.x += dx;
     this.y += dy;
+    this._updateCells();
 };
 
-Block.prototype.rotate = function (rotation) {
-    this.dir = (this.dir + rotation) % this.tp.directions;
+Block.prototype.transform = function (delta) {
+    this.form = (this.form + delta) % this.getForms();
+    this._updateCells();
 };
 
-// get the list of cells the block occupy
-Block.prototype.getCells = function () {
-    return this.getCellsFromOrigin(this.x, this.y);
+// get the list of rows the block occupy,
+// in increasing order, and with no repeated rows
+Block.prototype.getRows = function () {
+    var rows = [];
+    var cells = this.cells;
+    for (var i = 0; i < cells.length; i++) {
+        if (rows.indexOf(cells[i].y) === -1)
+            rows.push(cells[i].y);
+    }
+    return rows;
 };
 
-// get the list of cells the block occupy, given the specified top left cell and direction
-Block.prototype.getCellsFromOrigin = function (ox, oy, dir) {
-    ox = ox || 0;
-    oy = oy || 0;
-    if (dir === undefined) dir = this.dir;
-    dir %= this.tp.directions;
+// get the highest cell in each column
+Block.prototype.getHighestCells = function () {
+    return this.getHighestCellsFromOrigin(this.x, this.y, this.form);
+};
+
+// get the highest cell in each column, given the specified top left cell and form
+Block.prototype.getHighestCellsFromOrigin = function (ox, oy, form) {
     var cells = [];
-    var grid = this.tp.grid;
-    for (var y = 0; y < grid.length; y++) {
-        for (var x = 0; x < grid[0].length; x++) {
-            if ((grid[y][x] >> dir) & 1)
-                cells.push({ x: x + ox, y: y + oy });
+    var map = {};
+
+    // the list in the template was created row by row from top to bottom,
+    // so here we just take the first cell for each column
+    var template = this.template.getCells(form);
+    for (var i = 0; i < template.length; i++) {
+        var x = template[i].x;
+        if (!map[x]) {
+            cells.push({ x: x + ox, y: template[i].y + oy });
+            map[x] = true;
+        }
+    }
+    return cells;
+};
+
+// get the lowest cell in each column
+Block.prototype.getLowestCells = function () {
+    return this.getLowestCellsFromOrigin(this.x, this.y, this.form);
+};
+
+// get the lowest cell in each column, given the specified top left cell and form
+Block.prototype.getLowestCellsFromOrigin = function (ox, oy, form) {
+    var cells = [];
+    var map = {};
+
+    // the list in the template was created row by row from top to bottom,
+    // so here we just take the first cell (from the back) for each column
+    var template = this.template.getCells(form);
+    for (var i = template.length - 1; i >= 0; i++) {
+        var x = template[i].x;
+        if (!map[x]) {
+            cells.push({ x: x + ox, y: template[i].y + oy });
+            map[x] = true;
         }
     }
     return cells;
@@ -79,52 +144,62 @@ Block.prototype.getCellsWithOffset = function (dx, dy) {
     return this.getCellsFromOrigin(this.x + dx, this.y + dy);
 };
 
-// get the list of cells the block occupy, given the specified rotation
-Block.prototype.getCellsWithRotation = function (rotation) {
-    return this.getCellsFromOrigin(this.x, this.y, this.dir + rotation);
+// get the list of cells the block occupy, given the specified transformation
+Block.prototype.getTransformedCells = function (delta) {
+    return this.getCellsFromOrigin(this.x, this.y, this.form + delta);
 };
 
-// get the list of rows the block occupy,
-// in increasing order, and with no repeated rows
-Block.prototype.getRows = function () {
-    var rows = [];
-    var grid = this.tp.grid;
-    for (var y = 0; y < grid.length; y++) {
-        for (var x = 0; x < grid[0].length; x++) {
-            if ((grid[y][x] >> this.dir) & 1) {
-                rows.push(y + this.y);
-                break;
-            }
-        }
+// get the list of cells the block occupy, given the specified top left cell and form
+Block.prototype.getCellsFromOrigin = function (ox, oy, form) {
+    if (form === undefined) form = this.form;
+    form %= this.getForms();
+
+    var cells = [];
+    var template = this.template.getCells(form);
+    for (var i = 0; i < template.length; i++) {
+        cells.push({ x: template[i].x + ox, y: template[i].y + oy });
     }
-    return rows;
+    
+    return cells;
+};
+
+Block.prototype._updateCells = function () {
+    this.cells = this.getCellsFromOrigin(this.x, this.y);
 };
 
 
 /**
  * Provides a randomly shuffled source of Blocks
  * @constructor
- * @param {number} spawnX x-coordinate of block spawn point
- * @param {number} spawnY y-coordinate of block spawn point
+ * @param {number} spawnX x-coordinate of spawn point of blocks generated
+ * @param {number} spawnY y-coordinate of spawn point
  */
 function BlockGenerator(spawnX, spawnY) {
     this.spawnX = spawnX;
     this.spawnY = spawnY;
     this.templates = [];
-    this.largestBlock = 0;
+    this.maxBlockSize = 0;
 
     this.queue = [];
     this.count = 0;
 }
 
-BlockGenerator.prototype.addTemplate = function (name, directions, limited, grid) {
-    if (grid.length > this.largestBlock)
-        this.largestBlock = grid.length;
-    this.templates.push(new BlockTemplate(name, directions, limited, grid));
+BlockGenerator.prototype.addTemplate = function (name, forms, starter, grid) {
+    if (grid.length > this.maxBlockSize)
+        this.maxBlockSize = grid.length;
+    this.templates.push(new BlockTemplate(name, forms, starter, grid));
 };
 
 BlockGenerator.prototype.getMaxSize = function () {
-    return this.largestBlock;
+    return this.maxBlockSize;
+};
+
+BlockGenerator.prototype.getTemplateCount = function () {
+    return this.templates.length;
+};
+
+BlockGenerator.prototype.getBlockById = function (id) {
+    return new Block(this.templates[id], this.spawnX, this.spawnY);
 };
 
 BlockGenerator.prototype.next = function () {
@@ -142,8 +217,9 @@ BlockGenerator.prototype.reset = function () {
 BlockGenerator.prototype._populateQueue = function () {
     var queue = this.templates.concat(this.templates);
     this._shuffle(queue);
-    if (this.count == 0) { // don't start with a BlockTemplate marked limited
-        while (queue[queue.length - 1].limited)
+    if (this.count == 0) {
+        // first block must be marked as starter
+        while (!queue[queue.length - 1].starter)
             this._shuffle(queue);
     }
     this.queue = queue;

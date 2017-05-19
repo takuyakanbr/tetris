@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8" />
@@ -17,7 +17,10 @@
             <div id="grid-overlay" class="overlay fade-in">
                 <div id="grid-overlay-content" class="overlay-content">
                     <p id="grid-overlay-text">Press Start</p>
-                    <a href="#" class="button" id="grid-overlay-btn">Start</a>
+                    <div class="overlay-buttons">
+                        <a href="#" class="button" id="grid-overlay-btn">Start</a>
+                        <a href="#" class="button" id="grid-overlay-ai-btn">AI</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -56,6 +59,7 @@
     </div>
     <script src="js/block.js"></script>
     <script src="js/grid.js"></script>
+    <script src="js/ai.js"></script>
     <script src="js/tetris.js"></script>
 </body>
 </html>

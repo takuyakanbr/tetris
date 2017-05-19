@@ -1,10 +1,5 @@
 'use strict';
 
-// returns a random integer between min (inclusive) and max (exclusive)
-function getRandomInt(min, max) {
-    return Math.floor(Math.random() * (max - min)) + min;
-}
-
 
 /**
  * @constructor
@@ -18,12 +13,13 @@ function Tetris(opts) {
     
     this.generator = new BlockGenerator(Math.floor(opts.cols / 2) - 2, -3);
     this.setupTemplates();
+    this.ai = new AI(this.generator);
 
     this.grid = new GameGrid(opts.id, opts.rows, opts.cols);
     this.nextBlockGrid = new Grid('game-next-block', this.generator.getMaxSize(), this.generator.getMaxSize());
-    this.tickRateStart = opts.tickRateStart || 11; // 1.1s
-    this.tickRateEnd = opts.tickRateEnd || 5; // 0.5s
-    this.tickRateStep = 6;
+    this.tickRateStart = opts.tickRateStart || 44; // 1.1s
+    this.tickRateEnd = opts.tickRateEnd || 20; // 0.5s
+    this.tickRateStep = 2;
 
     // - state variables -
     this.tickRate = this.tickRateStart;
@@ -46,6 +42,13 @@ function Tetris(opts) {
     var self = this;
     setInterval(function () {
         if (self.paused || self.over) return;
+        if (self.auto) {
+            var block = self.grid.block;
+            if (block && !block.grounded) {
+                var m = self.ai.getNextMove(self.grid.grid, block);
+                self.move(m, true);
+            }
+        }
         self.clock = (self.clock + 1) % self.tickRate;
         if (self.clock == 0) {
             self.onTick();
@@ -53,7 +56,7 @@ function Tetris(opts) {
             self.onTick();
             self.fastForward = false;
         }
-    }, 100);
+    }, 25);
 }
 
 // select a random next block
@@ -66,11 +69,12 @@ Tetris.prototype.makeNextBlock = function () {
 };
 
 Tetris.prototype._showNextBlock = function () {
-    this.nextBlockGrid.updateTempCells(this.nextBlock.getCellsFromOrigin(), this.nextBlock.getName());
+    this.nextBlockGrid.setTempOnCells(this.nextBlock.getName(),
+        this.nextBlock.getCellsFromOrigin(0, 0));
 };
 
 Tetris.prototype._hideNextBlock = function () {
-    this.nextBlockGrid.updateTempCells(this.nextBlock.getCellsFromOrigin(), null);
+    this.nextBlockGrid.setTempOnCells(null, this.nextBlock.getCellsFromOrigin(0, 0));
 };
 
 Tetris.prototype._flashElementText = function ($element) {
@@ -136,8 +140,6 @@ Tetris.prototype.restart = function () {
     this.fastForward = false;
     this.score = 0;
     this.lines = 0;
-    this.blocks = 0;
-    this.badluck = 0;
     this.generator.reset();
     this.makeNextBlock();
     this.grid.changeBlock(null);
@@ -146,8 +148,10 @@ Tetris.prototype.restart = function () {
     this.$lines.innerHTML = '0';
 };
 
-Tetris.prototype.move = function (op) {
+Tetris.prototype.move = function (op, ai) {
+    if (op < 0) return;
     if (this.paused || this.over) return;
+    if (this.auto && !ai) return;
     if (op === 5) {
         this.fastForward = true;
         return;
@@ -165,6 +169,17 @@ Tetris.prototype.pause = function () {
 };
 
 Tetris.prototype.handleOverlayButton = function () {
+    this.auto = false;
+    if (this.over) {
+        this.restart();
+    } else if (this.paused) {
+        this.paused = false;
+    }
+    this.hideOverlay();
+};
+
+Tetris.prototype.handleAIButton = function () {
+    this.auto = true;
     if (this.over) {
         this.restart();
     } else if (this.paused) {
@@ -200,6 +215,9 @@ Tetris.prototype.setup = function () {
     this.inputManager.on('button', function () {
         self.handleOverlayButton();
     });
+    this.inputManager.on('aibutton', function () {
+        self.handleAIButton();
+    });
 
     this.$floatingBox = document.getElementById('grid-floating-box');
     this.$overlay = document.getElementById('grid-overlay');
@@ -218,43 +236,43 @@ Tetris.prototype.setup = function () {
 };
 
 Tetris.prototype.setupTemplates = function () {
-    this.generator.addTemplate('i', 2, false, [
+    this.generator.addTemplate('i', 2, true, [
         [0, 1, 0, 0],
         [0, 1, 0, 0],
         [2, 3, 2, 2],
         [0, 1, 0, 0]
     ]);
-    this.generator.addTemplate('j', 4, false, [
+    this.generator.addTemplate('j', 4, true, [
         [0, 0, 0, 0],
         [0, 4, 5, 0],
         [8, 14, 9, 0],
         [0, 7, 11, 2]
     ]);
-    this.generator.addTemplate('l', 4, false, [
+    this.generator.addTemplate('l', 4, true, [
         [0, 0, 0, 0],
         [0, 5, 4, 0],
         [0, 3, 14, 2],
         [8, 11, 13, 0]
     ]);
-    this.generator.addTemplate('o', 1, true, [
+    this.generator.addTemplate('o', 1, false, [
         [0, 0, 0, 0],
         [0, 0, 0, 0],
         [0, 1, 1, 0],
         [0, 1, 1, 0]
     ]);
-    this.generator.addTemplate('t', 4, false, [
+    this.generator.addTemplate('t', 4, true, [
         [0, 0, 0, 0],
         [0, 11, 0, 0],
         [13, 15, 7, 0],
         [0, 14, 0, 0]
     ]);
-    this.generator.addTemplate('s', 2, true, [
+    this.generator.addTemplate('s', 2, false, [
         [0, 0, 0, 0],
         [0, 2, 0, 0],
         [0, 3, 3, 0],
         [1, 1, 2, 0]
     ]);
-    this.generator.addTemplate('z', 2, true, [
+    this.generator.addTemplate('z', 2, false, [
         [0, 0, 0, 0],
         [0, 0, 2, 0],
         [1, 3, 2, 0],
@@ -388,6 +406,11 @@ InputManager.prototype.listen = function () {
     this.bindButtonPress('grid-overlay-btn', function (e) {
         e.preventDefault();
         self.emit('button');
+    });
+
+    this.bindButtonPress('grid-overlay-ai-btn', function (e) {
+        e.preventDefault();
+        self.emit('aibutton');
     });
 
     // help panel

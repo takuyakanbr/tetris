@@ -89,6 +89,7 @@ p {
     animation-name: blink;
 }
 .button {
+    margin: 0 4px;
     padding: 8px 28px 10px;
     font-variant: small-caps;
     text-transform: lowercase;

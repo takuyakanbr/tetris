@@ -14,13 +14,25 @@ function Cell(x, y) {
     this.shadow = null; // shadow tile
 
     this.$e = document.createElement('div');
-    this.$e.className += ' grid-cell';
+    this.$e.className = 'grid-cell';
 }
 
 Cell.prototype.appendTo = function ($parentNode) {
     $parentNode.appendChild(this.$e);
     return this;
 };
+
+Cell.prototype.isEmpty = function () {
+    return this.tile === null;
+};
+
+Cell.prototype.clear = function () {
+    this.tile = null;
+    this.temp = null;
+    this.shadow = null;
+    this.$e.className = 'grid-cell';
+}
+
 
 Cell.prototype.hasTile = function () {
     return this.tile !== null;
@@ -70,7 +82,7 @@ function Grid(elementId, rows, cols) {
     this.create();
 }
 
-// initialize the grid and displays it
+// initialize the grid and display it
 Grid.prototype.create = function () {
     for (var y = 0; y < this.height; y++) {
         var cells = [];
@@ -88,35 +100,46 @@ Grid.prototype.create = function () {
     }
 };
 
-// check if all the specified cells are empty
-Grid.prototype.areCellsEmpty = function (cells) {
-    for (var i = 0; i < cells.length; i++) {
-        var cell = cells[i];
-        if (cell.y < 0) continue;
-        if (this.getCell(cell.x, cell.y).hasTile())
+Grid.prototype.getCell = function (x, y) {
+    return this.grid[y][x];
+};
+
+// check if the coordinate is within the bounds of the board
+Grid.prototype.isValidCell = function (x, y) {
+    if (x < 0 || y < 0 || x >= this.width || y >= this.height)
+        return false;
+    return true;
+};
+
+// check if all the specified coordinates are within the bounds of the board
+Grid.prototype.areValidCells = function (coords) {
+    for (var i = 0; i < coords.length; i++) {
+        if (!this.isValidCell(coords[i].x, coords[i].y))
             return false;
     }
     return true;
 };
 
-// check if the cell is within the bounds of the board
-// set top to true if the top of the board should be checked too
-Grid.prototype.checkCell = function (cell, top) {
-    if (cell.x < 0 || (top && cell.y < 0))
-        return false;
-    if (cell.y >= this.height || cell.x >= this.width)
-        return false;
+// check if all the specified coordinates are within the left, right, and bottom bounds of the board
+Grid.prototype.checkBounds = function (coords) {
+    for (var i = 0; i < coords.length; i++) {
+        var c = coords[i];
+        if (c.x < 0 || c.x >= this.width || c.y >= this.height)
+            return false;
+    }
     return true;
 };
 
-// check if all the specified cells are within the bounds of the board
-// set top to true if the top of the board should be checked too
-Grid.prototype.checkCells = function (cells, top) {
+// check if the specified cell is empty
+Grid.prototype.isCellEmpty = function (x, y) {
+    if (y < 0) return true;
+    return this.getCell(x, y).isEmpty();
+};
+
+// check if all the specified cells are empty
+Grid.prototype.areCellsEmpty = function (cells) {
     for (var i = 0; i < cells.length; i++) {
-        var cell = cells[i];
-        if (cell.x < 0 || (top && cell.y < 0))
-            return false;
-        if (cell.y >= this.height || cell.x >= this.width)
+        if (!this.isCellEmpty(cells[i].x, cells[i].y))
             return false;
     }
     return true;
@@ -125,38 +148,32 @@ Grid.prototype.checkCells = function (cells, top) {
 Grid.prototype.clear = function () {
     for (var y = 0; y < this.height; y++) {
         for (var x = 0; x < this.width; x++) {
-            var cell = this.getCell(x, y);
-            cell.setTile(null);
-            cell.setTemp(null);
+            this.getCell(x, y).clear();
         }
     }
 };
 
-Grid.prototype.getCell = function (x, y) {
-    return this.grid[y][x];
-};
-
-Grid.prototype.updateCells = function (cells, tile) {
+Grid.prototype.setTileOnCells = function (tile, cells) {
     for (var i = 0; i < cells.length; i++) {
         var cell = cells[i];
-        if (this.checkCell(cell, true))
+        if (this.isValidCell(cell.x, cell.y))
             this.getCell(cell.x, cell.y).setTile(tile);
     }
 };
 
-Grid.prototype.updateTempCells = function (cells, temp) {
+Grid.prototype.setTempOnCells = function (tile, cells) {
     for (var i = 0; i < cells.length; i++) {
         var cell = cells[i];
-        if (this.checkCell(cell, true))
-            this.getCell(cell.x, cell.y).setTemp(temp);
+        if (this.isValidCell(cell.x, cell.y))
+            this.getCell(cell.x, cell.y).setTemp(tile);
     }
 };
 
-Grid.prototype.updateShadowCells = function (cells, shadow) {
+Grid.prototype.setShadowOnCells = function (tile, cells) {
     for (var i = 0; i < cells.length; i++) {
         var cell = cells[i];
-        if (this.checkCell(cell, true))
-            this.getCell(cell.x, cell.y).setShadow(shadow);
+        if (this.isValidCell(cell.x, cell.y))
+            this.getCell(cell.x, cell.y).setShadow(tile);
     }
 };
 
@@ -188,8 +205,8 @@ GameGrid.prototype.onTick = function () {
         return result;
     } else { // made contact with bottom / tiles
         this.block.grounded = true;
-        this.updateTempCells(this.block.getCells(), null);
-        this.updateCells(this.block.getCells(), this.block.getName());
+        this.setTempOnCells(null, this.block.getCells());
+        this.setTileOnCells(this.block.getName(), this.block.getCells());
         this.updateShadow(null);
         // check for full rows
         var rows = this._checkRows(this.block.getRows());
@@ -205,12 +222,12 @@ GameGrid.prototype.onTick = function () {
 // return false if this fails (game lost)
 GameGrid.prototype.changeBlock = function (block) {
     if (this.block) {
-        this.updateTempCells(this.block.getCells(), null);
+        this.setTempOnCells(null, this.block.getCells());
     }
     if (block) {
         var cells = block.getCells();
         if (this.areCellsEmpty(cells)) {
-            this.updateTempCells(block.getCells(), block.getName());
+            this.setTempOnCells(block.getName(), block.getCells());
             this.updateShadow(block);
         } else { // game lost
             return false;
@@ -236,8 +253,8 @@ GameGrid.prototype.updateBlock = function (op) {
         case 2: // move right
             var success = this._moveBlock(1, 0);
             return { success: success };
-        case 3: // rotate
-            var success = this._rotateBlock();
+        case 3: // transform
+            var success = this._transformBlock();
             return { success: success };
         case 4: // drop down
             var distance = this._dropBlock();
@@ -247,7 +264,7 @@ GameGrid.prototype.updateBlock = function (op) {
 };
 
 GameGrid.prototype.updateShadow = function (block) {
-    if (this.shadow) this.updateShadowCells(this.shadow.getCells(), null);
+    if (this.shadow) this.setShadowOnCells(null, this.shadow.getCells());
     if (block === undefined) block = this.block;
     if (!block) {
         this.shadow = null;
@@ -256,7 +273,7 @@ GameGrid.prototype.updateShadow = function (block) {
 
     var newShadow = block.copy();
     newShadow.shift(0, this._getDistanceToGround(newShadow));
-    this.updateShadowCells(newShadow.getCells(), newShadow.getName());
+    this.setShadowOnCells(newShadow.getName(), newShadow.getCells());
     this.shadow = newShadow;
 };
 
@@ -277,7 +294,7 @@ GameGrid.prototype._checkRows = function (rows) {
         if (y < 0) continue;
         var filled = true;
         for (var x = 0; x < this.width; x++) {
-            if (!this.getCell(x, y).hasTile()) {
+            if (this.getCell(x, y).isEmpty()) {
                 filled = false;
                 break;
             }
@@ -296,11 +313,13 @@ GameGrid.prototype._clearRows = function (rows) {
 
 // shift cells above the specified row down by 1 row
 GameGrid.prototype._shiftCellsDown = function (row) {
-    for (var y = row; y > 0; y--) {
-        for (var x = 0; x < this.width; x++) {
+    // iterate through every column and shift the tiles above the specified row
+    for (var x = 0; x < this.width; x++) {
+        for (var y = row; y > 0; y--) {
             this.getCell(x, y).setTile(this.getCell(x, y - 1).tile);
         }
     }
+    // set the top row to empty
     for (var x = 0; x < this.width; x++) {
         this.getCell(x, 0).setTile(null);
     }
@@ -311,7 +330,7 @@ GameGrid.prototype._getDistanceToGround = function (block) {
     var distance = 0;
     for (var i = 0; i < this.height; i++) {
         var cells = block.getCellsWithOffset(0, distance + 1);
-        if (!this.checkCells(cells) || !this.areCellsEmpty(cells))
+        if (!this.checkBounds(cells) || !this.areCellsEmpty(cells))
             break;
         distance++;
     }
@@ -334,24 +353,24 @@ GameGrid.prototype._dropBlock = function () {
 // returns false if unable to move (due to grid boundary / non-empty tiles)
 GameGrid.prototype._moveBlock = function (dx, dy) {
     var cells = this.block.getCellsWithOffset(dx, dy);
-    if (this.checkCells(cells) && this.areCellsEmpty(cells)) {
-        this.updateTempCells(this.block.getCells(), null);
+    if (this.checkBounds(cells) && this.areCellsEmpty(cells)) {
+        this.setTempOnCells(null, this.block.getCells());
         this.block.shift(dx, dy);
-        this.updateTempCells(this.block.getCells(), this.block.getName());
+        this.setTempOnCells(this.block.getName(), this.block.getCells());
         if (dx !== 0) this.updateShadow(this.block);
         return true;
     }
     return false;
 };
 
-// rotate the current block clockwise
-// returns false if unable to rotate (due to grid boundary / non-empty tiles)
-GameGrid.prototype._rotateBlock = function () {
-    var cells = this.block.getCellsWithRotation(1);
-    if (this.checkCells(cells) && this.areCellsEmpty(cells)) {
-        this.updateTempCells(this.block.getCells(), null);
-        this.block.rotate(1);
-        this.updateTempCells(this.block.getCells(), this.block.getName());
+// transform the current block
+// returns false if unable to transform (due to grid boundary / non-empty tiles)
+GameGrid.prototype._transformBlock = function () {
+    var cells = this.block.getTransformedCells(1);
+    if (this.checkBounds(cells) && this.areCellsEmpty(cells)) {
+        this.setTempOnCells(null, this.block.getCells());
+        this.block.transform(1);
+        this.setTempOnCells(this.block.getName(), this.block.getCells());
         this.updateShadow(this.block);
         return true;
     }
