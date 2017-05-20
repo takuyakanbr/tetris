@@ -73,17 +73,30 @@ function AI(generator) {
         return true;
     }
 
-    function getGroundedCells(block, x, form) {
-        var y = block.y;
-        var result = null;
-        while (true) {
-            var cells = block.getCellsFromOrigin(x, y, form);
-            if (checkCoords(cells)) {
-                result = cells;
+    function getDistanceToGround(block, x, form) {
+        var distance = height;
+        var lowest = block.getLowestCellsFromOrigin(x, block.y, form);
+
+        for (var i = 0; i < lowest.length; i++) {
+            var cx = lowest[i].x;
+            var cy = lowest[i].y;
+            var y = cy;
+
+            // determine the lowest position this cell can drop to
+            while (y + 1 < 0 || !grid[y + 1][cx]) {
                 y++;
-            } else break;
+                if (y == height - 1) break;
+            }
+
+            if (y - cy < distance)
+                distance = y - cy;
         }
-        return result;
+        return distance;
+    }
+
+    function getGroundedCells(block, x, form) {
+        var distance = getDistanceToGround(block, x, form);
+        return block.getCellsFromOrigin(x, block.y + distance, form);
     }
 
     function doMeanNode() {

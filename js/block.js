@@ -129,7 +129,7 @@ Block.prototype.getLowestCellsFromOrigin = function (ox, oy, form) {
     // the list in the template was created row by row from top to bottom,
     // so here we just take the first cell (from the back) for each column
     var template = this.template.getCells(form);
-    for (var i = template.length - 1; i >= 0; i++) {
+    for (var i = template.length - 1; i >= 0; i--) {
         var x = template[i].x;
         if (!map[x]) {
             cells.push({ x: x + ox, y: template[i].y + oy });

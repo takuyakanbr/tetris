@@ -326,13 +326,22 @@ GameGrid.prototype._shiftCellsDown = function (row) {
 };
 
 GameGrid.prototype._getDistanceToGround = function (block) {
-    if (block === undefined) block = this.block;
-    var distance = 0;
-    for (var i = 0; i < this.height; i++) {
-        var cells = block.getCellsWithOffset(0, distance + 1);
-        if (!this.checkBounds(cells) || !this.areCellsEmpty(cells))
-            break;
-        distance++;
+    var distance = this.height;
+    var lowest = block.getLowestCells();
+    
+    for (var i = 0; i < lowest.length; i++) {
+        var cx = lowest[i].x;
+        var cy = lowest[i].y;
+        var y = cy;
+
+        // determine the lowest position this cell can drop to
+        while (this.isCellEmpty(cx, y + 1)) {
+            y++;
+            if (y == this.height - 1) break;
+        }
+
+        if (y - cy < distance)
+            distance = y - cy;
     }
     return distance;
 };
@@ -341,7 +350,7 @@ GameGrid.prototype._getDistanceToGround = function (block) {
 // return the distance the block moved
 GameGrid.prototype._dropBlock = function () {
     if (this.block.grounded) return 0;
-    var distance = this._getDistanceToGround();
+    var distance = this._getDistanceToGround(this.block);
     this.block.grounded = true;
     if (distance > 0) {
         this._moveBlock(0, distance);
