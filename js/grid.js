@@ -245,13 +245,13 @@ GameGrid.prototype.updateBlock = function (op) {
 
     switch (op) {
         case 0: // move down
-            var success = this._moveBlock(0, 1);
+            var success = this._shiftBlock(0, 1);
             return { success: success };
         case 1: // move left
-            var success = this._moveBlock(-1, 0);
+            var success = this._shiftBlock(-1, 0);
             return { success: success };
         case 2: // move right
-            var success = this._moveBlock(1, 0);
+            var success = this._shiftBlock(1, 0);
             return { success: success };
         case 3: // transform
             var success = this._transformBlock();
@@ -353,14 +353,14 @@ GameGrid.prototype._dropBlock = function () {
     var distance = this._getDistanceToGround(this.block);
     this.block.grounded = true;
     if (distance > 0) {
-        this._moveBlock(0, distance);
+        this._shiftBlock(0, distance);
     }
     return distance;
 };
 
-// move the current block by (dx, dy) amount
-// returns false if unable to move (due to grid boundary / non-empty tiles)
-GameGrid.prototype._moveBlock = function (dx, dy) {
+// shift the current block by (dx, dy) amount
+// returns false if unable to shift (due to grid boundary / non-empty tiles)
+GameGrid.prototype._shiftBlock = function (dx, dy) {
     var cells = this.block.getCellsWithOffset(dx, dy);
     if (this.checkBounds(cells) && this.areCellsEmpty(cells)) {
         this.setTempOnCells(null, this.block.getCells());

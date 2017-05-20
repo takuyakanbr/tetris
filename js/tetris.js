@@ -164,7 +164,7 @@ Tetris.prototype.move = function (op, ai) {
 Tetris.prototype.pause = function () {
     if (this.over) return;
     this.paused = !this.paused;
-    if (this.paused) this.showOverlay('Game paused', 'Resume');
+    if (this.paused) this.showOverlay('Game paused', 'resume');
     else this.hideOverlay();
 };
 
@@ -197,7 +197,7 @@ Tetris.prototype.onTick = function () {
         if (this.grid.changeBlock(this.nextBlock)) {
             this.makeNextBlock();
         } else { // game over
-            this.showOverlay('Game over', 'Restart');
+            this.showOverlay('Game over', 'restart');
             this.over = true;
         }
     }

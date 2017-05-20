@@ -27,42 +27,52 @@ function AI(generator) {
 
         for (var x = 0; x < width; x++) high.push(null);
 
+        // penalize empty holes, and award full rows
         for (var y = 0; y < height; y++) {
             var full = true;
             for (var x = 0; x < width; x++) {
                 if (!grid[y][x]) {
                     full = false;
                     if (high[x] !== null)
-                        score -= 30 + (height - y) * 2;
+                        score -= 20 + (height - y) * 2;
                 } else {
                     if (high[x] === null)
                         high[x] = y;
                 }
             }
-            if (full) score += 50;
+            if (full) score += 65;
         }
 
         for (var x = 0; x < width; x++) {
+            // penalize high columns
             if (high[x] === null) high[x] = height;
             if (x == 0 || x == width - 1)
-                score -= (height - high[x]) ** 1.5;
-            else 
                 score -= (height - high[x]) ** 1.6;
+            else 
+                score -= (height - high[x]) ** 1.7;
+
+            // penalize big column height differences
+            if (x != 0) {
+                var diff = high[x] - high[x - 1];
+                if (diff < 0) diff *= -1;
+                if (diff > 3) score -= diff * 5;
+            }
         }
 
         return score;
     }
 
-    function updateCells(coords, bool) {
+    function updateCells(coords, dx, dy, bool) {
         coords.forEach(function (c) {
-            if (c.y >= 0) grid[c.y][c.x] = bool;
+            if (c.y + dy >= 0) grid[c.y + dy][c.x + dx] = bool;
         });
     }
-
-    // check if all coordinates are within left, right, bottom bounds, and empty
-    function checkCoords(coords) {
+    
+    // check if all coordinates, after shifted by dx,
+    // are within left, right, bottom bounds, and empty
+    function checkCoords(coords, dx) {
         for (var i = 0; i < coords.length; i++) {
-            var x = coords[i].x;
+            var x = coords[i].x + dx;
             var y = coords[i].y;
             if (x < 0 || x >= width || y >= height) // out of bounds
                 return false;
@@ -73,7 +83,8 @@ function AI(generator) {
         return true;
     }
 
-    function getDistanceToGround(block, x, form) {
+    function getDistanceToGround(block, dx, form) {
+        var x = block.x + dx;
         var distance = height;
         var lowest = block.getLowestCellsFromOrigin(x, block.y, form);
 
@@ -94,11 +105,6 @@ function AI(generator) {
         return distance;
     }
 
-    function getGroundedCells(block, x, form) {
-        var distance = getDistanceToGround(block, x, form);
-        return block.getCellsFromOrigin(x, block.y + distance, form);
-    }
-
     function doMeanNode() {
         var score = 0;
         var count = generator.getTemplateCount();
@@ -115,22 +121,23 @@ function AI(generator) {
         var bestScore = -100000;
 
         for (var form = 0; form < block.getForms(); form++) {
-            var x = bx;
+            var dx = 0;
             var reverse = false;
+            var cells = block.getCellsFromOrigin(bx, by, form);
 
             while (true) {
-                if (checkCoords(block.getCellsFromOrigin(x, by, form))) {
-                    var cells = getGroundedCells(block, x, form);
-                    updateCells(cells, true);
+                if (checkCoords(cells, dx)) {
+                    var dy = getDistanceToGround(block, dx, form);
+                    updateCells(cells, dx, dy, true);
                     var score = calculateScore();
                     if (score > bestScore)
                         bestScore = score;
-                    updateCells(cells, false);
-                    if (reverse) x--;
-                    else x++;
+                    updateCells(cells, dx, dy, false);
+                    if (reverse) dx--;
+                    else dx++;
                 } else {
                     if (reverse) break;
-                    x = bx - 1;
+                    dx = -1;
                     reverse = true;
                 }
             }
@@ -146,25 +153,26 @@ function AI(generator) {
         var bestX = block.x;
 
         for (var form = 0; form < block.getForms(); form++) {
-            var x = bx;
+            var dx = 0;
             var reverse = false;
+            var cells = block.getCellsFromOrigin(bx, by, form);
 
             while (true) {
-                if (checkCoords(block.getCellsFromOrigin(x, by, form))) {
-                    var cells = getGroundedCells(block, x, form);
-                    updateCells(cells, true);
+                if (checkCoords(cells, dx)) {
+                    var dy = getDistanceToGround(block, dx, form);
+                    updateCells(cells, dx, dy, true);
                     var score = doMeanNode();
                     if (score > bestScore) {
                         bestScore = score;
                         bestForm = form;
-                        bestX = x;
+                        bestX = bx + dx;
                     }
-                    updateCells(cells, false);
-                    if (reverse) x--;
-                    else x++;
+                    updateCells(cells, dx, dy, false);
+                    if (reverse) dx--;
+                    else dx++;
                 } else {
                     if (reverse) break;
-                    x = bx - 1;
+                    dx = -1;
                     reverse = true;
                 }
             }
