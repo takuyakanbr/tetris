@@ -33,7 +33,56 @@ function BlockTemplate(name, forms, starter, grid) {
 
 BlockTemplate.prototype.getCells = function (form) {
     return this.cellLists[form];
-}
+};
+
+// get the highest cell in each column, given the specified form and coordinate offset
+BlockTemplate.prototype.getHighestCellsFromOrigin = function (form, ox, oy) {
+    var highest = [];
+    var map = {};
+
+    // the list in was created row by row from top to bottom,
+    // so here we just take the first cell for each column
+    var cells = this.getCells(form);
+    for (var i = 0; i < cells.length; i++) {
+        var x = cells[i].x;
+        if (!map[x]) {
+            highest.push({ x: x + ox, y: cells[i].y + oy });
+            map[x] = true;
+        }
+    }
+    return highest;
+};
+
+// get the lowest cell in each column, given the specified form and coordinate offset
+BlockTemplate.prototype.getLowestCellsFromOrigin = function (form, ox, oy) {
+    var lowest = [];
+    var map = {};
+
+    // the list was created row by row from top to bottom,
+    // so here we just take the last cell for each column
+    var cells = this.getCells(form);
+    for (var i = cells.length - 1; i >= 0; i--) {
+        var x = cells[i].x;
+        if (!map[x]) {
+            lowest.push({ x: x + ox, y: cells[i].y + oy });
+            map[x] = true;
+        }
+    }
+    return lowest;
+};
+
+// get the list of cell, given the specified form and coordinate offset
+BlockTemplate.prototype.getCellsFromOrigin = function (form, ox, oy) {
+    form %= this.forms;
+
+    var cells = [];
+    var template = this.getCells(form);
+    for (var i = 0; i < template.length; i++) {
+        cells.push({ x: template[i].x + ox, y: template[i].y + oy });
+    }
+
+    return cells;
+};
 
 
 /**
@@ -95,76 +144,26 @@ Block.prototype.getRows = function () {
 
 // get the highest cell in each column
 Block.prototype.getHighestCells = function () {
-    return this.getHighestCellsFromOrigin(this.x, this.y, this.form);
-};
-
-// get the highest cell in each column, given the specified top left cell and form
-Block.prototype.getHighestCellsFromOrigin = function (ox, oy, form) {
-    var cells = [];
-    var map = {};
-
-    // the list in the template was created row by row from top to bottom,
-    // so here we just take the first cell for each column
-    var template = this.template.getCells(form);
-    for (var i = 0; i < template.length; i++) {
-        var x = template[i].x;
-        if (!map[x]) {
-            cells.push({ x: x + ox, y: template[i].y + oy });
-            map[x] = true;
-        }
-    }
-    return cells;
+    return this.template.getHighestCellsFromOrigin(this.form, this.x, this.y);
 };
 
 // get the lowest cell in each column
 Block.prototype.getLowestCells = function () {
-    return this.getLowestCellsFromOrigin(this.x, this.y, this.form);
-};
-
-// get the lowest cell in each column, given the specified top left cell and form
-Block.prototype.getLowestCellsFromOrigin = function (ox, oy, form) {
-    var cells = [];
-    var map = {};
-
-    // the list in the template was created row by row from top to bottom,
-    // so here we just take the first cell (from the back) for each column
-    var template = this.template.getCells(form);
-    for (var i = template.length - 1; i >= 0; i--) {
-        var x = template[i].x;
-        if (!map[x]) {
-            cells.push({ x: x + ox, y: template[i].y + oy });
-            map[x] = true;
-        }
-    }
-    return cells;
+    return this.template.getLowestCellsFromOrigin(this.form, this.x, this.y);
 };
 
 // get the list of cells the block occupy, given the specified offset
 Block.prototype.getCellsWithOffset = function (dx, dy) {
-    return this.getCellsFromOrigin(this.x + dx, this.y + dy);
+    return this.template.getCellsFromOrigin(this.form, this.x + dx, this.y + dy);
 };
 
 // get the list of cells the block occupy, given the specified transformation
 Block.prototype.getTransformedCells = function (delta) {
-    return this.getCellsFromOrigin(this.x, this.y, this.form + delta);
-};
-
-// get the list of cells the block occupy, given the specified top left cell and form
-Block.prototype.getCellsFromOrigin = function (ox, oy, form) {
-    if (form === undefined) form = this.form;
-    form %= this.getForms();
-
-    var cells = [];
-    var template = this.template.getCells(form);
-    for (var i = 0; i < template.length; i++) {
-        cells.push({ x: template[i].x + ox, y: template[i].y + oy });
-    }
-    
-    return cells;
+    return this.template.getCellsFromOrigin(this.form + delta, this.x, this.y);
 };
 
 Block.prototype._updateCells = function () {
-    this.cells = this.getCellsFromOrigin(this.x, this.y);
+    this.cells = this.template.getCellsFromOrigin(this.form, this.x, this.y);
 };
 
 
@@ -197,6 +196,10 @@ BlockGenerator.prototype.getMaxSize = function () {
 BlockGenerator.prototype.getTemplateCount = function () {
     return this.templates.length;
 };
+
+BlockGenerator.prototype.getTemplate = function (id) {
+    return this.templates[id];
+}
 
 BlockGenerator.prototype.getBlockById = function (id) {
     return new Block(this.templates[id], this.spawnX, this.spawnY);

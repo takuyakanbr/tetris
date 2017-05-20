@@ -332,9 +332,12 @@ GameGrid.prototype._getDistanceToGround = function (block) {
     for (var i = 0; i < lowest.length; i++) {
         var cx = lowest[i].x;
         var cy = lowest[i].y;
-        var y = cy;
+
+        // already at ground
+        if (cy + 1 == this.height) return 0;
 
         // determine the lowest position this cell can drop to
+        var y = cy;
         while (this.isCellEmpty(cx, y + 1)) {
             y++;
             if (y == this.height - 1) break;

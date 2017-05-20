@@ -70,11 +70,11 @@ Tetris.prototype.makeNextBlock = function () {
 
 Tetris.prototype._showNextBlock = function () {
     this.nextBlockGrid.setTempOnCells(this.nextBlock.getName(),
-        this.nextBlock.getCellsFromOrigin(0, 0));
+        this.nextBlock.template.getCells(0));
 };
 
 Tetris.prototype._hideNextBlock = function () {
-    this.nextBlockGrid.setTempOnCells(null, this.nextBlock.getCellsFromOrigin(0, 0));
+    this.nextBlockGrid.setTempOnCells(null, this.nextBlock.template.getCells(0));
 };
 
 Tetris.prototype._flashElementText = function ($element) {
