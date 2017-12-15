@@ -374,16 +374,16 @@ InputManager.prototype.listen = function () {
 
     $gameGrid.addEventListener('touchstart', function (e) {
         if (e.touches.length > 1 || e.targetTouches.length > 1) return;
-        touchStartX = event.touches[0].clientX;
-        touchStartY = event.touches[0].clientY;
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
         e.preventDefault();
     });
 
     $gameGrid.addEventListener('touchmove', function (e) {
         if (e.touches.length > 1 || e.targetTouches.length > 1) return;
 
-        var touchEndX = event.touches[0].clientX;
-        var touchEndY = event.touches[0].clientY;
+        var touchEndX = e.touches[0].clientX;
+        var touchEndY = e.touches[0].clientY;
         var dx = touchEndX - touchStartX;
         var dy = touchEndY - touchStartY;
         if (self.handleSwipe(dx, dy, false)) {
@@ -471,6 +471,6 @@ StorageManager.prototype._isSupported = function (type) {
 };
 
 
-window.requestAnimationFrame(function () {
+window.onload = function () {
     new Tetris({ id: 'game-grid', rows: 20, cols: 12 });
-});
+};
